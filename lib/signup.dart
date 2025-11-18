@@ -115,11 +115,10 @@ class _SignupScreenState extends State<SignupScreen> {
         padding: const EdgeInsets.all(18),
         child: Column(
           children: [
-            // NAME
+
             TextField(controller: _name, decoration: _dec("Full Name")),
             const SizedBox(height: 12),
 
-            // MOBILE
             TextField(
               controller: _mobile,
               keyboardType: TextInputType.number,
@@ -143,7 +142,6 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             const SizedBox(height: 12),
 
-            // ========= DOB BUTTON (BLACK & WHITE) =========
             Row(
               children: [
                 Text(
@@ -176,7 +174,6 @@ class _SignupScreenState extends State<SignupScreen> {
 
             const SizedBox(height: 10),
 
-            // ========= GENDER =========
             Row(
               children: [
                 const Text("Gender:", style: TextStyle(fontSize: 16)),
