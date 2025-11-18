@@ -29,76 +29,75 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  void _showMsg(String s) {
+  void msg(String s) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(s)),
     );
   }
 
-  bool _validateInputs() {
+  bool validate() {
     if (_name.text.trim().isEmpty) {
-      _showMsg("Enter full name");
+      msg("Enter full name");
       return false;
     }
 
     if (_mobile.text.trim().length < 10) {
-      _showMsg("Enter valid mobile");
+      msg("Enter valid mobile number");
       return false;
     }
 
     if (!_email.text.contains("@")) {
-      _showMsg("Invalid email");
+      msg("Enter valid email");
       return false;
     }
 
     if (_password.text.length < 6) {
-      _showMsg("Password must be 6+ chars");
+      msg("Password must be at least 6 characters");
       return false;
     }
 
     if (_dob == null) {
-      _showMsg("Select Date of Birth");
+      msg("Select Date of Birth");
       return false;
     }
 
     if (_gender.isEmpty) {
-      _showMsg("Select gender");
+      msg("Select gender");
       return false;
     }
 
     return true;
   }
 
-  Future<void> _signup() async {
-    if (!_validateInputs()) return;
+  Future<void> signup() async {
+    if (!validate()) return;
 
     setState(() => _loading = true);
 
     try {
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _email.text.trim(),
-        password: _password.text,
+        password: _password.text.trim(),
       );
 
-      _showMsg("Account Created Successfully ✔");
-
+      msg("Account Created Successfully ✔");
       Navigator.pushReplacementNamed(context, LoginScreen.routeName);
+
     } on FirebaseAuthException catch (e) {
-      _showMsg(e.message ?? e.code);
-    } finally {
-      setState(() => _loading = false);
+      msg(e.message ?? "Signup error");
     }
+
+    setState(() => _loading = false);
   }
 
-  InputDecoration _dec(String label) => InputDecoration(
+  InputDecoration field(String label) => InputDecoration(
     labelText: label,
     filled: true,
     fillColor: Colors.white,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
     ),
-    contentPadding:
-    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
   );
 
   @override
@@ -107,38 +106,35 @@ class _SignupScreenState extends State<SignupScreen> {
       backgroundColor: const Color(0xfff6f2ff),
 
       appBar: AppBar(
-        title: const Text("Signup"),
         backgroundColor: Colors.deepPurple,
+        title: const Text("Signup"),
       ),
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(18),
         child: Column(
           children: [
-
-            TextField(controller: _name, decoration: _dec("Full Name")),
+            TextField(controller: _name, decoration: field("Full Name")),
             const SizedBox(height: 12),
 
             TextField(
               controller: _mobile,
               keyboardType: TextInputType.number,
-              decoration: _dec("Mobile Number"),
+              decoration: field("Mobile Number"),
             ),
             const SizedBox(height: 12),
 
-            // EMAIL
             TextField(
               controller: _email,
               keyboardType: TextInputType.emailAddress,
-              decoration: _dec("Email"),
+              decoration: field("Email"),
             ),
             const SizedBox(height: 12),
 
-            // PASSWORD
             TextField(
               controller: _password,
               obscureText: true,
-              decoration: _dec("Password"),
+              decoration: field("Password"),
             ),
             const SizedBox(height: 12),
 
@@ -164,8 +160,8 @@ class _SignupScreenState extends State<SignupScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,   // BLACK
-                    foregroundColor: Colors.white,   // WHITE TEXT
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
                   ),
                   child: const Text("Pick DOB"),
                 ),
@@ -199,11 +195,10 @@ class _SignupScreenState extends State<SignupScreen> {
               height: 50,
               child: _loading
                   ? const Center(
-                child: CircularProgressIndicator(
-                    color: Colors.deepPurple),
+                child: CircularProgressIndicator(color: Colors.deepPurple),
               )
                   : ElevatedButton(
-                onPressed: _signup,
+                onPressed: signup,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
                   shape: RoundedRectangleBorder(
@@ -219,6 +214,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 12),
 
             TextButton(
@@ -228,7 +224,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 "Already have an account? Login",
                 style: TextStyle(color: Colors.deepPurple),
               ),
-            ),
+            )
           ],
         ),
       ),

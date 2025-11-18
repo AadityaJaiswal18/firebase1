@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'signup.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,43 +16,59 @@ class _LoginScreenState extends State<LoginScreen> {
   final _password = TextEditingController();
   bool _loading = false;
 
-  @override
-  void dispose() {
-    _email.dispose();
-    _password.dispose();
-    super.dispose();
+  void msg(String s) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(s)),
+    );
   }
 
-  void _show(String s) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s)));
-  }
+  Future<void> loginEmail() async {
+    if (!_email.text.contains("@")) return msg("Enter valid email");
+    if (_password.text.length < 6) return msg("Password must be 6+ chars");
 
-  Future<void> _login() async {
     setState(() => _loading = true);
+
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _email.text.trim(),
-        password: _password.text,
+        password: _password.text.trim(),
       );
-      _show('Login Successful ✔');
-      // you can navigate to a Home screen here
+
+      msg("Login Successful ✔");
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') _show('No user found for that email.');
-      else if (e.code == 'wrong-password') _show('Wrong password.');
-      else _show(e.message ?? e.toString());
+      msg(e.message ?? e.code);
+    }
+
+    setState(() => _loading = false);
+  }
+
+  Future<void> loginGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
+
+      final googleAuth = await googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      msg("Google Login Successful ✔");
     } catch (e) {
-      _show(e.toString());
-    } finally {
-      if (mounted) setState(() => _loading = false);
+      msg(e.toString());
     }
   }
 
-  InputDecoration _dec(String label) => InputDecoration(
+  InputDecoration field(String label) => InputDecoration(
     labelText: label,
     filled: true,
     fillColor: Colors.white,
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
   );
 
@@ -59,37 +76,97 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xfff6f2ff),
-      appBar: AppBar(title: const Text('Login'), backgroundColor: Colors.deepPurple),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-              TextField(controller: _email, decoration: _dec('Email'), keyboardType: TextInputType.emailAddress),
-              const SizedBox(height: 12),
-              TextField(controller: _password, decoration: _dec('Password'), obscureText: true),
-              const SizedBox(height: 18),
 
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: _loading
-                    ? const Center(child: CircularProgressIndicator(color: Colors.deepPurple))
-                    : ElevatedButton(
-                  onPressed: _login,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  child: const Text('Login', style: TextStyle(fontSize: 16, color: Colors.white)),
+      appBar: AppBar(
+        backgroundColor: Colors.deepPurple,
+        title: const Text("Login"),
+      ),
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const SizedBox(height: 30),
+
+            TextField(controller: _email, decoration: field("Email")),
+            const SizedBox(height: 15),
+
+            TextField(
+              controller: _password,
+              obscureText: true,
+              decoration: field("Password"),
+            ),
+            const SizedBox(height: 25),
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: _loading
+                  ? const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.deepPurple,
+                ),
+              )
+                  : ElevatedButton(
+                onPressed: loginEmail,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  "Login",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
+            ),
 
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => Navigator.pushReplacementNamed(context, SignupScreen.routeName),
-                child: const Text('Don\'t have an account? Signup', style: TextStyle(color: Colors.deepPurple)),
+            const SizedBox(height: 25),
+
+            InkWell(
+              onTap: loginGoogle,
+              child: Container(
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.network(
+                      "https://th.bing.com/th/id/OIP.u-Oj5cReHJfTZTzavM6DZwAAAA?w=180&h=180&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3",
+                      height: 26,
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      "Continue with Google",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+
+            const SizedBox(height: 25),
+
+            TextButton(
+              onPressed: () {
+                Navigator.pushReplacementNamed(
+                    context, SignupScreen.routeName);
+              },
+              child: const Text(
+                "Don’t have an account? Signup",
+                style: TextStyle(color: Colors.deepPurple),
+              ),
+            ),
+          ],
         ),
       ),
     );
