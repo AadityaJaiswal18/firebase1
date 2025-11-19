@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get.dart';
+import 'auth_controller.dart';
 import 'login.dart';
+import 'phone_input.dart';
 
 class SignupScreen extends StatefulWidget {
   static const routeName = "/signup";
@@ -72,22 +74,10 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> signup() async {
     if (!validate()) return;
 
-    setState(() => _loading = true);
-
-    try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _email.text.trim(),
-        password: _password.text.trim(),
-      );
-
-      msg("Account Created Successfully ✔");
-      Navigator.pushReplacementNamed(context, LoginScreen.routeName);
-
-    } on FirebaseAuthException catch (e) {
-      msg(e.message ?? "Signup error");
-    }
-
-    setState(() => _loading = false);
+    AuthController.to.signup(
+      _email.text.trim(),
+      _password.text.trim(),
+    );
   }
 
   InputDecoration field(String label) => InputDecoration(
@@ -104,12 +94,10 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xfff6f2ff),
-
       appBar: AppBar(
         backgroundColor: Colors.deepPurple,
         title: const Text("Signup"),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -193,11 +181,7 @@ class _SignupScreenState extends State<SignupScreen> {
             SizedBox(
               width: double.infinity,
               height: 50,
-              child: _loading
-                  ? const Center(
-                child: CircularProgressIndicator(color: Colors.deepPurple),
-              )
-                  : ElevatedButton(
+              child: ElevatedButton(
                 onPressed: signup,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
@@ -218,10 +202,17 @@ class _SignupScreenState extends State<SignupScreen> {
             const SizedBox(height: 12),
 
             TextButton(
-              onPressed: () => Navigator.pushReplacementNamed(
-                  context, LoginScreen.routeName),
+              onPressed: () => Get.offNamed(LoginScreen.routeName),
               child: const Text(
                 "Already have an account? Login",
+                style: TextStyle(color: Colors.deepPurple),
+              ),
+            ),
+
+            TextButton(
+              onPressed: () => Get.toNamed(PhoneInputScreen.routeName),
+              child: const Text(
+                "Or Login with Phone Number",
                 style: TextStyle(color: Colors.deepPurple),
               ),
             )

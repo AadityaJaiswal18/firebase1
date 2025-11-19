@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:get/get.dart';
+import 'auth_controller.dart';
 import 'signup.dart';
+import 'phone_input.dart';
 
 class LoginScreen extends StatefulWidget {
   static const routeName = "/login";
@@ -14,7 +15,13 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
-  bool _loading = false;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
+  }
 
   void msg(String s) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -26,40 +33,14 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_email.text.contains("@")) return msg("Enter valid email");
     if (_password.text.length < 6) return msg("Password must be 6+ chars");
 
-    setState(() => _loading = true);
-
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _email.text.trim(),
-        password: _password.text.trim(),
-      );
-
-      msg("Login Successful ✔");
-    } on FirebaseAuthException catch (e) {
-      msg(e.message ?? e.code);
-    }
-
-    setState(() => _loading = false);
+    AuthController.to.loginEmail(
+      _email.text.trim(),
+      _password.text.trim(),
+    );
   }
 
   Future<void> loginGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
-
-      final googleAuth = await googleUser.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      await FirebaseAuth.instance.signInWithCredential(credential);
-
-      msg("Google Login Successful ✔");
-    } catch (e) {
-      msg(e.toString());
-    }
+    AuthController.to.loginGoogle();
   }
 
   InputDecoration field(String label) => InputDecoration(
@@ -101,13 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
             SizedBox(
               width: double.infinity,
               height: 50,
-              child: _loading
-                  ? const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.deepPurple,
-                ),
-              )
-                  : ElevatedButton(
+              child: ElevatedButton(
                 onPressed: loginEmail,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
@@ -154,12 +129,23 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 20),
 
             TextButton(
               onPressed: () {
-                Navigator.pushReplacementNamed(
-                    context, SignupScreen.routeName);
+                Get.toNamed(PhoneInputScreen.routeName);
+              },
+              child: const Text(
+                "Login with Phone Number",
+                style: TextStyle(color: Colors.deepPurple, fontSize: 16),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            TextButton(
+              onPressed: () {
+                Get.offNamed(SignupScreen.routeName);
               },
               child: const Text(
                 "Don’t have an account? Signup",

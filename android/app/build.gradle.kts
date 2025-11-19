@@ -1,9 +1,7 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // Firebase Google services plugin
     id("com.google.gms.google-services")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -11,7 +9,6 @@ android {
     namespace = "com.example.firebase1"
     compileSdk = flutter.compileSdkVersion
 
-    // ⭐ Firebase requires this specific NDK version
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -25,9 +22,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.firebase1"
-
         minSdk = 23
-
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -42,4 +37,16 @@ android {
 
 flutter {
     source = "../.."
+}
+
+// ⭐⭐ GOOGLE LOGIN FIX HERE ⭐⭐
+dependencies {
+    // Google Play Services Auth (REQUIRED for Google Sign-In)
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+
+    // Firebase BOM
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+
+    // Firebase Auth SDK
+    implementation("com.google.firebase:firebase-auth")
 }
